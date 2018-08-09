@@ -12,6 +12,8 @@ import android.app.Activity;
 import android.os.Bundle;
 import android.util.Log;
 
+import com.github.mikephil.charting.components.Description;
+import com.github.mikephil.charting.components.YAxis;
 import com.mbientlab.metawear.MetaWearBoard;
 import com.mbientlab.metawear.Route;
 import com.mbientlab.metawear.Subscriber;
@@ -46,7 +48,7 @@ public class MainActivity extends Activity implements ServiceConnection {
     private BtleService.LocalBinder serviceBinder;
     private MetaWearBoard mwBoard;
     private Accelerometer accelerometer;
-    private LineChart[] mCharts = new LineChart[4];
+    private LineChart[] mCharts = new LineChart[3];
 
     // Chart data structures
     private List<Entry> accelX = new ArrayList<>();
@@ -88,14 +90,14 @@ public class MainActivity extends Activity implements ServiceConnection {
         mCharts[0] = findViewById(R.id.chart1);
         mCharts[1] = findViewById(R.id.chart2);
         mCharts[2] = findViewById(R.id.chart3);
-        mCharts[3] = findViewById(R.id.chart4);
+//        mCharts[3] = findViewById(R.id.chart4);
 
-        Typeface mTf = Typeface.createFromAsset(getAssets(), "OpenSans-Bold.ttf");
+//        Typeface mTf = Typeface.createFromAsset(getAssets(), "OpenSans-Bold.ttf");
 
         for (int i = 0; i < mCharts.length; i++) {
 
             LineData data = getData(36, 100);
-            data.setValueTypeface(mTf);
+//            data.setValueTypeface(mTf);
 
             // add some transparency to the color with "& 0x90FFFFFF"
             setupChart(mCharts[i], data, mColors[i % mColors.length]);
@@ -127,7 +129,7 @@ public class MainActivity extends Activity implements ServiceConnection {
         mwBoard.connectAsync().onSuccessTask(task -> {
             accelerometer = mwBoard.getModule(Accelerometer.class);
             accelerometer.configure()
-                    .odr(50f)
+                    .odr(5f)
                     .commit();
             return accelerometer.acceleration().addRouteAsync(source ->
                     source.stream((Subscriber) (data, env) -> {
@@ -255,12 +257,25 @@ public class MainActivity extends Activity implements ServiceConnection {
         Legend l = chart.getLegend();
         l.setEnabled(false);
 
-        chart.getAxisLeft().setEnabled(false);
-        chart.getAxisLeft().setSpaceTop(40);
-        chart.getAxisLeft().setSpaceBottom(40);
-        chart.getAxisRight().setEnabled(false);
 
+        chart.getAxisLeft().setEnabled(true);
+        chart.getAxisLeft().setDrawZeroLine(true);  // draw 0G line
+        chart.getAxisLeft().setDrawGridLines(false);
+        chart.getAxisLeft().setDrawLabels(true);
+        chart.getAxisLeft().setGranularity(1f);
+        chart.getAxisLeft().setLabelCount(8, true);
+        chart.getAxisLeft().setPosition(YAxis.YAxisLabelPosition.INSIDE_CHART);
+        chart.getAxisLeft().setTextSize(2f);
+        chart.getAxisLeft().setSpaceTop(5);
+        chart.getAxisLeft().setSpaceBottom(5);
+
+
+        chart.getAxisRight().setEnabled(false);
         chart.getXAxis().setEnabled(false);
+
+
+
+
 
         // animate calls invalidate()...
         chart.animateX(2500);
@@ -272,17 +287,27 @@ public class MainActivity extends Activity implements ServiceConnection {
         LineData yData = createLineData(new LineDataSet(accelY, "Y Acceleration"));
         LineData zData = createLineData(new LineDataSet(accelZ, "Z Acceleration"));
 
+
 //        xData.setValueTypeface(mTf);
 //        yData.setValueTypeface(mTf);
 //        zData.setValueTypeface(mTf);
 
+        Description xDesc = new Description();
+        xDesc.setText("X-Axis Acceleration");
         mCharts[0].setData(xData);
+        mCharts[0].setDescription(xDesc);
         mCharts[0].invalidate();
 
+        Description yDesc = new Description();
+        yDesc.setText("Y-Axis Acceleration");
         mCharts[1].setData(yData);
+        mCharts[1].setDescription(yDesc);
         mCharts[1].invalidate();
 
+        Description zDesc = new Description();
+        zDesc.setText("Z-Axis Acceleration");
         mCharts[2].setData(zData);
+        mCharts[2].setDescription(zDesc);
         mCharts[2].invalidate();
     }
 }
