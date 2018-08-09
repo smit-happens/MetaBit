@@ -26,7 +26,11 @@ import bolts.Continuation;
  */
 import android.graphics.Color;
 import android.graphics.Typeface;
+import android.view.View;
 import android.view.WindowManager;
+import android.widget.Button;
+import android.widget.Toast;
+
 import com.github.mikephil.charting.charts.LineChart;
 import com.github.mikephil.charting.components.Legend;
 import com.github.mikephil.charting.data.Entry;
@@ -46,27 +50,34 @@ public class MainActivity extends Activity implements ServiceConnection {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+//        setContentView(R.layout.activity_main);
+
+        getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
+                WindowManager.LayoutParams.FLAG_FULLSCREEN);
         setContentView(R.layout.activity_main);
 
         // Bind the service when the activity is created
         getApplicationContext().bindService(new Intent(this, BtleService.class),
                 this, Context.BIND_AUTO_CREATE);
 
+
         findViewById(R.id.start).setOnClickListener(view -> {
             accelerometer.acceleration().start();
             accelerometer.start();
+            Toast.makeText(this, "You clicked the button", Toast.LENGTH_SHORT).show();
+            Log.i(LOG_TAG, "START BUTTON PRESSED HUCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC");
         });
         findViewById(R.id.stop).setOnClickListener(view -> {
             accelerometer.stop();
             accelerometer.acceleration().stop();
         });
 
+
+
         /*
           Chart huccccc code below
          */
-        getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
-                WindowManager.LayoutParams.FLAG_FULLSCREEN);
-        setContentView(R.layout.activity_main);
+
 
         mCharts[0] = findViewById(R.id.chart1);
         mCharts[1] = findViewById(R.id.chart2);
@@ -85,6 +96,7 @@ public class MainActivity extends Activity implements ServiceConnection {
         }
 
     }
+
 
     @Override
     public void onDestroy() {
@@ -166,6 +178,7 @@ public class MainActivity extends Activity implements ServiceConnection {
 
         return data;
     }
+
 
     /**
      * CHART STUFF
