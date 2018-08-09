@@ -1,5 +1,6 @@
 package com.barely.just.metabit;
 
+import android.app.Application;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothManager;
 import android.content.ComponentName;
@@ -55,12 +56,9 @@ public class MainActivity extends Activity implements ServiceConnection {
     private List<Entry> accelY = new ArrayList<>();
     private List<Entry> accelZ = new ArrayList<>();
 
-
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-//        setContentView(R.layout.activity_main);
 
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
                 WindowManager.LayoutParams.FLAG_FULLSCREEN);
@@ -72,25 +70,29 @@ public class MainActivity extends Activity implements ServiceConnection {
 
 
         findViewById(R.id.start).setOnClickListener(view -> {
-            accelerometer.acceleration().start();
-            accelerometer.start();
+            try{
+                accelerometer.acceleration().start();
+                accelerometer.start();
+            } catch(Exception e){
+                Log.e(LOG_TAG, "Tried to start acceleration without board being connected");
+                Toast.makeText(MainActivity.this, "MetaMotion not connected.", Toast.LENGTH_LONG).show();
+            }
         });
         findViewById(R.id.stop).setOnClickListener(view -> {
-            accelerometer.stop();
-            accelerometer.acceleration().stop();
+            try{
+                accelerometer.stop();
+                accelerometer.acceleration().stop();
+            } catch (Exception e) {
+                Log.e(LOG_TAG, "Tried to stop acceleration without board being connected");
+                Toast.makeText(MainActivity.this, "MetaMotion not connected.", Toast.LENGTH_LONG).show();
+            }
         });
-
-
-        /*
-          Chart huccccc code below
-         */
 
 
 
         mCharts[0] = findViewById(R.id.chart1);
         mCharts[1] = findViewById(R.id.chart2);
         mCharts[2] = findViewById(R.id.chart3);
-//        mCharts[3] = findViewById(R.id.chart4);
 
 //        Typeface mTf = Typeface.createFromAsset(getAssets(), "OpenSans-Bold.ttf");
 
@@ -142,8 +144,10 @@ public class MainActivity extends Activity implements ServiceConnection {
         }).continueWith((Continuation<Route, Void>) task -> {
             if (task.isFaulted()) {
                 Log.e(LOG_TAG, mwBoard.isConnected() ? "Error setting up route" : "Error connecting", task.getError());
+                Toast.makeText(MainActivity.this, "MetaMotion not connected.", Toast.LENGTH_LONG).show();
             } else {
                 Log.i(LOG_TAG, "Connected");
+                Toast.makeText(MainActivity.this, "MetaMotion connected.", Toast.LENGTH_LONG).show();
 //                debug = mwBoard.getModule(Debug.class);
 //                logging= mwBoard.getModule(Logging.class);
             }
@@ -154,7 +158,9 @@ public class MainActivity extends Activity implements ServiceConnection {
 
     @Override
     public void onServiceDisconnected(ComponentName componentName) {
-
+        //tOAST, LOG
+        Log.i(LOG_TAG, "MetaMotion Disconnected.");
+        Toast.makeText(MainActivity.this, "MetaMotion disonnected.", Toast.LENGTH_LONG).show();
     }
 
     /**
@@ -266,8 +272,10 @@ public class MainActivity extends Activity implements ServiceConnection {
         chart.getAxisLeft().setLabelCount(8, true);
         chart.getAxisLeft().setPosition(YAxis.YAxisLabelPosition.INSIDE_CHART);
         chart.getAxisLeft().setTextSize(2f);
-        chart.getAxisLeft().setSpaceTop(5);
-        chart.getAxisLeft().setSpaceBottom(5);
+        chart.getAxisLeft().setSpaceTop(10);
+        chart.getAxisLeft().setSpaceBottom(10);
+        chart.getAxisLeft().setAxisMinimum(-2f);
+        chart.getAxisLeft().setAxisMaximum(2f);
 
 
         chart.getAxisRight().setEnabled(false);
@@ -294,17 +302,20 @@ public class MainActivity extends Activity implements ServiceConnection {
 
         Description xDesc = new Description();
         xDesc.setText("X-Axis Acceleration");
+        xDesc.setTextSize(10f);
         mCharts[0].setData(xData);
         mCharts[0].setDescription(xDesc);
         mCharts[0].invalidate();
 
         Description yDesc = new Description();
         yDesc.setText("Y-Axis Acceleration");
+        yDesc.setTextSize(10f);
         mCharts[1].setData(yData);
         mCharts[1].setDescription(yDesc);
         mCharts[1].invalidate();
 
         Description zDesc = new Description();
+        zDesc.setTextSize(10f);
         zDesc.setText("Z-Axis Acceleration");
         mCharts[2].setData(zData);
         mCharts[2].setDescription(zDesc);
