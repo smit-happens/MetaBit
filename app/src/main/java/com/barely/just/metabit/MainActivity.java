@@ -37,6 +37,7 @@ import com.github.mikephil.charting.data.Entry;
 import com.github.mikephil.charting.data.LineData;
 import com.github.mikephil.charting.data.LineDataSet;
 import java.util.ArrayList;
+import java.util.List;
 
 
 public class MainActivity extends Activity implements ServiceConnection {
@@ -46,6 +47,13 @@ public class MainActivity extends Activity implements ServiceConnection {
     private MetaWearBoard mwBoard;
     private Accelerometer accelerometer;
     private LineChart[] mCharts = new LineChart[4];
+
+    // Chart data structures
+    private List<Entry> accelX = new ArrayList<>();
+    private List<Entry> accelY = new ArrayList<>();
+    private List<Entry> accelZ = new ArrayList<>();
+
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -64,8 +72,6 @@ public class MainActivity extends Activity implements ServiceConnection {
         findViewById(R.id.start).setOnClickListener(view -> {
             accelerometer.acceleration().start();
             accelerometer.start();
-            Toast.makeText(this, "You clicked the button", Toast.LENGTH_SHORT).show();
-            Log.i(LOG_TAG, "START BUTTON PRESSED HUCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC");
         });
         findViewById(R.id.stop).setOnClickListener(view -> {
             accelerometer.stop();
@@ -73,10 +79,10 @@ public class MainActivity extends Activity implements ServiceConnection {
         });
 
 
-
         /*
           Chart huccccc code below
          */
+
 
 
         mCharts[0] = findViewById(R.id.chart1);
@@ -126,6 +132,10 @@ public class MainActivity extends Activity implements ServiceConnection {
             return accelerometer.acceleration().addRouteAsync(source ->
                     source.stream((Subscriber) (data, env) -> {
                         Log.i(LOG_TAG, data.value(Acceleration.class).toString());
+                        accelX.add(new Entry(accelX.size(), data.value(Acceleration.class).x()));
+                        accelY.add(new Entry(accelX.size(), data.value(Acceleration.class).y()));
+                        accelZ.add(new Entry(accelX.size(), data.value(Acceleration.class).z()));
+                        updateCharts();
                     }));
         }).continueWith((Continuation<Route, Void>) task -> {
             if (task.isFaulted()) {
@@ -179,6 +189,20 @@ public class MainActivity extends Activity implements ServiceConnection {
         return data;
     }
 
+    private LineData createLineData(LineDataSet set)
+    {
+        set.setLineWidth(1.75f);
+        set.setCircleRadius(1f);
+        set.setCircleHoleRadius(0.5f);
+        set.setColor(Color.WHITE);
+        set.setCircleColor(Color.WHITE);
+        set.setHighLightColor(Color.WHITE);
+        set.setDrawValues(false);
+
+        return new LineData(set);
+    }
+
+
 
     /**
      * CHART STUFF
@@ -201,13 +225,13 @@ public class MainActivity extends Activity implements ServiceConnection {
         ((LineDataSet) data.getDataSetByIndex(0)).setCircleColorHole(color);
 
         // no description text
-        chart.getDescription().setEnabled(false);
+//        chart.getDescription().setEnabled(true);
 
         // mChart.setDrawHorizontalGrid(false);
         //
         // enable / disable grid background
         chart.setDrawGridBackground(false);
-//        chart.getRenderer().getGridPaint().setGridColor(Color.WHITE & 0x70FFFFFF);
+//        chart.getRenderer().getGridPaint().setGridColor(0x70FFFFFF);
 
         // enable touch gestures
         chart.setTouchEnabled(true);
@@ -240,5 +264,25 @@ public class MainActivity extends Activity implements ServiceConnection {
 
         // animate calls invalidate()...
         chart.animateX(2500);
+    }
+
+    private void updateCharts()
+    {
+        LineData xData = createLineData(new LineDataSet(accelX, "X Acceleration"));
+        LineData yData = createLineData(new LineDataSet(accelY, "Y Acceleration"));
+        LineData zData = createLineData(new LineDataSet(accelZ, "Z Acceleration"));
+
+//        xData.setValueTypeface(mTf);
+//        yData.setValueTypeface(mTf);
+//        zData.setValueTypeface(mTf);
+
+        mCharts[0].setData(xData);
+        mCharts[0].invalidate();
+
+        mCharts[1].setData(yData);
+        mCharts[1].invalidate();
+
+        mCharts[2].setData(zData);
+        mCharts[2].invalidate();
     }
 }
